@@ -10,7 +10,6 @@ import { Menu, Vote } from "lucide-react";
 const navLinks = [
   { href: "/", label: "Beranda" },
   { href: "/leaderboard", label: "Hasil Suara" },
-  { href: "/admin", label: "Admin" },
 ];
 
 export function Header() {

@@ -212,7 +212,6 @@ export default function Home() {
             <a href="/leaderboard" className="hover:text-white transition-colors">Hasil Suara</a>
             <button onClick={() => scrollToSection('cara-voting')} className="hover:text-white transition-colors">Cara Voting</button>
             <button onClick={() => scrollToSection('faq')} className="hover:text-white transition-colors">FAQ</button>
-            <a href="/admin" className="hover:text-white transition-colors">Admin</a>
             <div className="flex items-center gap-2 text-white bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
               Live Voting
