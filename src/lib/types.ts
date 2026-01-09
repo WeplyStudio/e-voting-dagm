@@ -15,5 +15,7 @@ export type Voter = {
   id: string; // Will be ObjectId string from MongoDB
   identifier: string; // A unique identifier for the voter, e.g., student ID
   hasVoted: boolean;
-  votedAt: Date;
+  votedAt?: Date;
 };
+
+    

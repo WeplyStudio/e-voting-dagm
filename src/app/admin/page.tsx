@@ -11,8 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";
-import { getCandidates, getVotingStatus, getShowResultsStatus } from "@/lib/actions";
-import { Candidate } from "@/lib/types";
+import { getCandidates, getVotingStatus, getShowResultsStatus, getVoters } from "@/lib/actions";
+import { Candidate, Voter } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const loginSchema = z.object({
@@ -27,6 +27,7 @@ const AUTH_COOKIE_NAME = "admin-authenticated";
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
+  const [voters, setVoters] = useState<Voter[] | null>(null);
   const [votingStatus, setVotingStatus] = useState<boolean | null>(null);
   const [showResultsStatus, setShowResultsStatus] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,10 +54,12 @@ export default function AdminPage() {
       setLoading(true);
       Promise.all([
         getCandidates(),
+        getVoters(),
         getVotingStatus(),
         getShowResultsStatus(),
-      ]).then(([candidatesData, votingStatusData, showResultsData]) => {
+      ]).then(([candidatesData, votersData, votingStatusData, showResultsData]) => {
             setCandidates(candidatesData);
+            setVoters(votersData);
             setVotingStatus(votingStatusData);
             setShowResultsStatus(showResultsData);
             setLoading(false);
@@ -89,6 +92,7 @@ export default function AdminPage() {
     document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0`;
     setIsAuthenticated(false);
     setCandidates(null);
+    setVoters(null);
     setVotingStatus(null);
     setShowResultsStatus(null);
     setLoading(false);
@@ -96,22 +100,16 @@ export default function AdminPage() {
 
   if (loading) {
       return (
-        <div className="space-y-4">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-96 mt-2" />
-          <div className="border rounded-lg p-4 space-y-2">
-            <Skeleton className="h-10 w-full" />
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
-          </div>
+        <div className="flex items-center justify-center min-h-screen">
+          <Skeleton className="h-[80vh] w-[90vw] rounded-2xl" />
         </div>
       );
   }
   
-  if (isAuthenticated && candidates !== null && votingStatus !== null && showResultsStatus !== null) {
+  if (isAuthenticated && candidates !== null && voters !== null && votingStatus !== null && showResultsStatus !== null) {
     return <AdminDashboard
-        initialCandidates={candidates} 
+        initialCandidates={candidates}
+        initialVoters={voters}
         initialVotingStatus={votingStatus} 
         initialShowResultsStatus={showResultsStatus}
         onLogout={handleLogout}
@@ -119,7 +117,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="flex items-center justify-center py-12">
+    <div className="flex items-center justify-center py-12 min-h-screen">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit">
@@ -154,3 +152,5 @@ export default function AdminPage() {
     </div>
   );
 }
+
+    

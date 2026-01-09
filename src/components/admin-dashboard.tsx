@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
-import type { Candidate } from "@/lib/types";
+import type { Candidate, Voter } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -23,17 +23,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { deleteCandidate, setVotingStatus, setShowResultsStatus, resetAllVotes } from "@/lib/actions";
+import { deleteCandidate, setVotingStatus, setShowResultsStatus, resetAllVotes, getVoters } from "@/lib/actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Switch } from "./ui/switch";
 import { EditCandidateDialog } from "./edit-candidate-dialog";
 import { AddCandidateDialog } from "./add-candidate-dialog";
 import { motion } from "framer-motion";
 import { LayoutDashboard, Users, PieChart, Settings, LogOut, Vote, BarChart, AlertTriangle, Plus, Edit3, Trash2, TrendingUp, UserCheck, Clock, Search, AlertCircle } from "lucide-react";
+import { VotersManager } from "./voters-manager";
 
 
 interface AdminDashboardProps {
     initialCandidates: Candidate[];
+    initialVoters: Voter[];
     initialVotingStatus: boolean;
     initialShowResultsStatus: boolean;
     onLogout: () => void;
@@ -100,11 +102,13 @@ const SidebarItem = ({ icon, label, active, onClick }: { icon: React.ReactNode, 
 
 export function AdminDashboard({
     initialCandidates,
+    initialVoters,
     initialVotingStatus,
     initialShowResultsStatus,
     onLogout
 }: AdminDashboardProps) {
   const [candidates, setCandidates] = useState<Candidate[]>(initialCandidates);
+  const [voters, setVoters] = useState<Voter[]>(initialVoters);
   const [votingOpen, setVotingOpen] = useState(initialVotingStatus);
   const [showResults, setShowResults] = useState(initialShowResultsStatus);
   const [activeTab, setActiveTab] = useState('overview');
@@ -112,8 +116,10 @@ export function AdminDashboard({
   const stats = useMemo(() => {
     const totalCandidates = candidates.length;
     const totalVotes = candidates.reduce((acc, c) => acc + c.votes, 0);
-    return { totalCandidates, totalVotes };
-  }, [candidates]);
+    const totalRegisteredVoters = voters.length;
+    const participation = totalRegisteredVoters > 0 ? Math.round((totalVotes / totalRegisteredVoters) * 100) : 0;
+    return { totalCandidates, totalVotes, totalRegisteredVoters, participation };
+  }, [candidates, voters]);
 
   const sortedCandidates = useMemo(() => {
     return [...candidates].sort((a, b) => b.votes - a.votes);
@@ -154,11 +160,13 @@ export function AdminDashboard({
     const result = await resetAllVotes();
     if (result.success) {
         setCandidates(prev => prev.map(c => ({ ...c, votes: 0 })));
+        setVoters(prev => prev.map(v => ({ ...v, hasVoted: false, votedAt: undefined })));
     }
   }
 
     const DYNAMIC_STATS = [
-        { label: "Total Suara Masuk", value: String(stats.totalVotes), change: `${stats.totalVotes > 0 ? '+' : ''}${stats.totalVotes}`, icon: <UserCheck size={20} className="text-green-400" /> },
+        { label: "Total Pemilih Terdaftar", value: String(stats.totalRegisteredVoters), change: "100%", icon: <Users size={20} className="text-blue-400" /> },
+        { label: "Total Suara Masuk", value: String(stats.totalVotes), change: `${stats.participation}%`, icon: <UserCheck size={20} className="text-green-400" /> },
         { label: "Total Kandidat", value: `${stats.totalCandidates} Paslon`, change: "Final", icon: <Users size={20} className="text-purple-400" /> },
         { label: "Sesi Voting", value: votingOpen ? "Dibuka" : "Ditutup", change: "Live", icon: <Clock size={20} className="text-orange-400" /> },
     ];
@@ -166,6 +174,11 @@ export function AdminDashboard({
     const getCandidateColor = (index: number) => {
         const colors = ['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-yellow-500', 'bg-pink-500'];
         return colors[index % colors.length];
+    }
+    
+    const onVotersUpdated = async () => {
+        const updatedVoters = await getVoters();
+        setVoters(updatedVoters);
     }
 
   return (
@@ -221,7 +234,7 @@ export function AdminDashboard({
                                 <p className="text-neutral-400">Berikut adalah laporan real-time pemilihan OSIS.</p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 {DYNAMIC_STATS.map((stat, idx) => (
                                     <StatCard key={idx} label={stat.label} value={stat.value} change={stat.change} icon={stat.icon} />
                                 ))}
@@ -300,66 +313,64 @@ export function AdminDashboard({
                             </div>
                         </motion.div>
                     )}
-
-                    {(activeTab === 'voters' || activeTab === 'settings') && (
+                     {activeTab === 'voters' && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                             {activeTab === 'settings' ? (
-                                <div className="space-y-8">
-                                    <h2 className="text-2xl font-bold text-white">Pengaturan Sesi</h2>
-                                     <Card className="bg-neutral-900 border border-white/5">
-                                        <CardHeader>
-                                            <CardTitle>Kontrol Pemilihan</CardTitle>
-                                            <CardDescription>Atur status sesi voting dan visibilitas hasil suara untuk publik.</CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4">
-                                            <div className="flex items-center justify-between p-4 rounded-lg bg-neutral-800/50 border border-white/5">
-                                                <div>
-                                                    <h4 className="font-semibold text-white">Buka Sesi Voting</h4>
-                                                    <p className="text-sm text-neutral-400">Izinkan atau hentikan pengguna memberikan suara.</p>
-                                                </div>
-                                                <Switch checked={votingOpen} onCheckedChange={handleVotingToggle} />
+                           <VotersManager initialVoters={voters} onVotersUpdated={onVotersUpdated} />
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'settings' && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                             <div className="space-y-8">
+                                <h2 className="text-2xl font-bold text-white">Pengaturan Sesi</h2>
+                                 <Card className="bg-neutral-900 border border-white/5">
+                                    <CardHeader>
+                                        <CardTitle>Kontrol Pemilihan</CardTitle>
+                                        <CardDescription>Atur status sesi voting dan visibilitas hasil suara untuk publik.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex items-center justify-between p-4 rounded-lg bg-neutral-800/50 border border-white/5">
+                                            <div>
+                                                <h4 className="font-semibold text-white">Buka Sesi Voting</h4>
+                                                <p className="text-sm text-neutral-400">Izinkan atau hentikan pengguna memberikan suara.</p>
                                             </div>
-                                            <div className="flex items-center justify-between p-4 rounded-lg bg-neutral-800/50 border border-white/5">
-                                                <div>
-                                                    <h4 className="font-semibold text-white">Tampilkan Halaman Hasil</h4>
-                                                    <p className="text-sm text-neutral-400">Tampilkan atau sembunyikan halaman hasil suara dari publik.</p>
-                                                </div>
-                                                <Switch checked={showResults} onCheckedChange={handleShowResultsToggle} />
+                                            <Switch checked={votingOpen} onCheckedChange={handleVotingToggle} />
+                                        </div>
+                                        <div className="flex items-center justify-between p-4 rounded-lg bg-neutral-800/50 border border-white/5">
+                                            <div>
+                                                <h4 className="font-semibold text-white">Tampilkan Halaman Hasil</h4>
+                                                <p className="text-sm text-neutral-400">Tampilkan atau sembunyikan halaman hasil suara dari publik.</p>
                                             </div>
-                                        </CardContent>
-                                    </Card>
-                                     <Card className="border-destructive/30 bg-destructive/5">
-                                        <CardHeader>
-                                            <CardTitle className="text-destructive">Zona Berbahaya</CardTitle>
-                                            <CardDescription>Tindakan di bawah ini tidak dapat diurungkan.</CardDescription>
-                                        </CardHeader>
-                                        <CardContent>
-                                             <AlertDialog>
-                                                <AlertDialogTrigger asChild>
-                                                     <Button variant="destructive" className="w-full sm:w-auto">
-                                                        <AlertTriangle className="mr-2" size={16}/> Reset Semua Suara
-                                                     </Button>
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent>
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>Anda Yakin Ingin Mereset Semua Suara?</AlertDialogTitle>
-                                                        <AlertDialogDescription>Ini akan menghapus semua suara yang telah masuk dan semua data pemilih. Gunakan ini hanya untuk memulai sesi pemilihan baru.</AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter>
-                                                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                                                        <AlertDialogAction onClick={handleResetVotes} className="bg-destructive hover:bg-destructive/90">Ya, Reset Sekarang</AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                            </AlertDialog>
-                                        </CardContent>
-                                    </Card>
-                                </div>
-                             ) : (
-                                <div className="flex flex-col items-center justify-center h-96 text-neutral-500">
-                                    <AlertCircle size={48} className="mb-4 opacity-20" />
-                                    <p>Halaman {activeTab} sedang dalam pengembangan.</p>
-                                </div>
-                             )}
+                                            <Switch checked={showResults} onCheckedChange={handleShowResultsToggle} />
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                                 <Card className="border-destructive/30 bg-destructive/5">
+                                    <CardHeader>
+                                        <CardTitle className="text-destructive">Zona Berbahaya</CardTitle>
+                                        <CardDescription>Tindakan di bawah ini tidak dapat diurungkan.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                         <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                 <Button variant="destructive" className="w-full sm:w-auto">
+                                                    <AlertTriangle className="mr-2" size={16}/> Reset Semua Data Pemilihan
+                                                 </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Anda Yakin Ingin Mereset Semua Data?</AlertDialogTitle>
+                                                    <AlertDialogDescription>Ini akan menghapus SEMUA suara yang telah masuk dan SEMUA token pemilih yang terdaftar. Gunakan ini hanya untuk memulai sesi pemilihan dari awal.</AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={handleResetVotes} className="bg-destructive hover:bg-destructive/90">Ya, Reset Sekarang</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </CardContent>
+                                </Card>
+                            </div>
                         </motion.div>
                     )}
                 </div>
@@ -368,3 +379,5 @@ export function AdminDashboard({
     </div>
   );
 }
+
+    

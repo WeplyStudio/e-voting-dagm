@@ -4,14 +4,13 @@ import { z } from "zod";
 import { getCandidatesCollection, getVotersCollection, getSettingsCollection } from "./mongodb";
 import { revalidatePath } from "next/cache";
 import { ObjectId } from "mongodb";
-import type { Candidate } from "./types";
-import imageCompression from 'browser-image-compression';
+import type { Candidate, Voter } from "./types";
 
 
 function revalidateAll() {
     revalidatePath("/", "layout");
     revalidatePath("/admin");
-    revalidatePath("/results");
+    revalidatePath("/leaderboard");
 }
 
 function docToCandidate(doc: any): Candidate {
@@ -23,6 +22,17 @@ function docToCandidate(doc: any): Candidate {
         id: _id.toString(),
         votes: doc.votes || 0,
     } as Candidate;
+}
+
+function docToVoter(doc: any): Voter {
+    if (!doc) return doc;
+    const { _id, ...rest } = doc;
+    
+    return {
+        ...rest,
+        id: _id.toString(),
+        hasVoted: doc.hasVoted || false,
+    } as Voter;
 }
 
 // --- Candidate Management ---
@@ -167,33 +177,71 @@ export async function castVote(formData: FormData) {
 
     try {
         const voters = await getVotersCollection();
+        const voter = await voters.findOne({ identifier: voterIdentifier });
 
-        // Check if voter has already voted
-        const existingVoter = await voters.findOne({ identifier: voterIdentifier });
-        if (existingVoter) {
+        if (!voter) {
+            return { success: false, message: 'Token pemilih tidak terdaftar.' };
+        }
+        
+        if (voter.hasVoted) {
             return { success: false, message: 'Token ini sudah digunakan untuk memilih.' };
         }
-
-        // Add to voters collection to mark as voted
-        await voters.insertOne({
-            identifier: voterIdentifier,
-            hasVoted: true,
-            votedAt: new Date(),
-        });
         
-        // Increment candidate's vote count
+        await voters.updateOne(
+            { _id: voter._id },
+            { $set: { hasVoted: true, votedAt: new Date() } }
+        );
+        
         const candidates = await getCandidatesCollection();
         await candidates.updateOne(
             { _id: new ObjectId(candidateId) },
             { $inc: { votes: 1 } }
         );
         
-        revalidatePath("/results");
+        revalidateAll();
         return { success: true };
 
     } catch (error) {
         console.error("Gagal memberikan suara:", error);
         return { success: false, message: 'Terjadi kesalahan pada server.' };
+    }
+}
+
+// --- Voter Token Management ---
+
+export async function getVoters(): Promise<Voter[]> {
+    const collection = await getVotersCollection();
+    const votersFromDb = await collection.find({}).sort({ _id: -1 }).toArray();
+    return votersFromDb.map(docToVoter);
+}
+
+export async function addVoterTokens(tokens: string) {
+    const tokenList = tokens.split('\n').map(t => t.trim()).filter(t => t);
+    if (tokenList.length === 0) {
+        return { success: false, message: "Tidak ada token untuk ditambahkan." };
+    }
+
+    try {
+        const voters = await getVotersCollection();
+        const existingTokens = await voters.find({ identifier: { $in: tokenList } }).toArray();
+        const existingIdentifiers = new Set(existingTokens.map(v => v.identifier));
+
+        const newTokens = tokenList
+            .filter(token => !existingIdentifiers.has(token))
+            .map(token => ({
+                identifier: token,
+                hasVoted: false,
+            }));
+
+        if (newTokens.length > 0) {
+            await voters.insertMany(newTokens);
+        }
+
+        revalidatePath("/admin");
+        return { success: true, added: newTokens.length, duplicates: existingIdentifiers.size };
+    } catch (error) {
+        console.error("Gagal menambah token pemilih:", error);
+        return { success: false, message: 'Gagal memproses token.' };
     }
 }
 
@@ -245,11 +293,13 @@ export async function setShowResultsStatus(show: boolean) {
 
 export async function resetAllVotes() {
     try {
+        // Reset votes on all candidates
         const candidates = await getCandidatesCollection();
         await candidates.updateMany({}, { $set: { votes: 0 } });
 
+        // Reset hasVoted status on all voters, but keep the tokens
         const voters = await getVotersCollection();
-        await voters.deleteMany({});
+        await voters.updateMany({}, { $set: { hasVoted: false }, $unset: { votedAt: "" } });
         
         revalidateAll();
         return { success: true };
@@ -258,3 +308,24 @@ export async function resetAllVotes() {
         return { success: false, message: "Gagal mereset semua data suara." };
     }
 }
+
+export async function resetAllData() {
+    try {
+        const candidates = await getCandidatesCollection();
+        await candidates.deleteMany({});
+        
+        const voters = await getVotersCollection();
+        await voters.deleteMany({});
+        
+        const settings = await getSettingsCollection();
+        await settings.deleteMany({});
+        
+        revalidateAll();
+        return { success: true };
+    } catch (error) {
+        console.error("Gagal mereset semua data:", error);
+        return { success: false, message: "Gagal mereset semua data pemilihan." };
+    }
+}
+
+    
