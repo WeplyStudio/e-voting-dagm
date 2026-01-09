@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -6,12 +5,11 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Sparkles } from "lucide-react";
+import { Menu, Vote } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "Beranda" },
-  { href: "/leaderboard", label: "Peringkat" },
-  { href: "/judge", label: "Juri" },
+  { href: "/results", label: "Hasil Suara" },
   { href: "/admin", label: "Admin" },
 ];
 
@@ -38,8 +36,8 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/80 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-20 items-center">
         <Link href="/" className="mr-8 flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-primary" />
-          <span className="font-bold font-headline text-xl">80Fest</span>
+          <Vote className="h-6 w-6 text-primary" />
+          <span className="font-bold font-headline text-xl">E-Voting OSIS</span>
         </Link>
         <div className="hidden md:flex flex-1 items-center space-x-2">
           {renderNavLinks()}

@@ -1,56 +1,41 @@
 
-import { Leaderboard } from "@/components/leaderboard";
-import { getArtworks, getLeaderboardStatus } from "@/lib/actions";
-import { Trophy } from "lucide-react";
-import { ConfettiCelebration } from "@/components/confetti-celebration";
+import { ResultsDisplay } from "@/components/results-display";
+import { getCandidates, getVotingStatus, getShowResultsStatus } from "@/lib/actions";
+import { BarChart, Lock } from "lucide-react";
 
-const ARTWORKS_PER_PAGE = 5;
-
-export default async function LeaderboardPage() {
-  const showResults = await getLeaderboardStatus();
+export default async function ResultsPage() {
+  const showResults = await getShowResultsStatus();
+  const candidates = await getCandidates();
   
   if (!showResults) {
      return (
        <div className="space-y-12">
         <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary">Papan Peringkat</h1>
+            <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary">Hasil Perolehan Suara</h1>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Hasil akhir dari Lomba Desain Poster 80Fest!
+              Perhitungan suara pemilihan ketua OSIS.
             </p>
         </div>
         <div className="text-center py-20 border-2 border-dashed border-border/50 rounded-xl bg-card/50">
-            <Trophy className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-6 text-xl font-medium">Hasil Belum Diumumkan</h3>
+            <Lock className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-6 text-xl font-medium">Hasil Suara Belum Dirilis</h3>
             <p className="mt-2 text-base text-muted-foreground">
-              Proses penjurian masih berlangsung. Nantikan pengumuman pemenang di halaman ini!
+              Hasil perolehan suara akan ditampilkan di sini setelah sesi voting selesai dan dikonfirmasi oleh admin.
             </p>
         </div>
       </div>
     );
   }
-
-  const { artworks: initialArtworks, hasMore } = await getArtworks({ 
-    page: 1, 
-    limit: ARTWORKS_PER_PAGE, 
-    leaderboardOnly: true 
-  });
   
   return (
-    <>
-      <ConfettiCelebration />
-      <div className="space-y-12">
-        <div className="text-center">
-          <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary">Papan Peringkat</h1>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Hasil akhir dari Lomba Desain Poster 80Fest!
-          </p>
-        </div>
-        <Leaderboard 
-          initialArtworks={initialArtworks} 
-          initialHasMore={hasMore} 
-          artworksPerPage={ARTWORKS_PER_PAGE}
-        />
+    <div className="space-y-12">
+      <div className="text-center">
+        <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary">Hasil Perolehan Suara</h1>
+        <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+          Perolehan suara final dari pemilihan ketua OSIS.
+        </p>
       </div>
-    </>
+      <ResultsDisplay initialCandidates={candidates} />
+    </div>
   );
 }

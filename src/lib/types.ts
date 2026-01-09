@@ -1,65 +1,19 @@
-
 import type { ObjectId } from "mongodb";
 
-export type ScoreCriteria = {
-  theme_match: number;       // Kesesuaian dengan tema
-  layout: number;            // Tata letak
-  typography_color: number;  // Tipografi dan warna
-  content_clarity: number;   // Kejelasan isi/konten
-};
-
-export type JudgeScore = {
-  judgeName: string;
-  criteria: ScoreCriteria;
-  totalScore: number;
-};
-
-export type Comment = {
-  id: string; // From MongoDB ObjectId
-  _id: ObjectId;
-  artworkId: ObjectId;
-  authorName: string;
-  text: string;
-  createdAt: Date;
-  status: 'pending' | 'approved' | 'rejected';
-  aiDecision?: 'allow' | 'deny';
-  aiReason?: string;
-};
-
-export type Artwork = {
+export type Candidate = {
   id: string; // Will be ObjectId string from MongoDB
   name: string;
-  class: string;
-  title: string;
-  description:string;
-  imageUrl?: string;
-  scores: JudgeScore[];
-  comments: Comment[];
-  totalPoints: number;
-  likes: number; // Jumlah "like" yang diterima karya
-  isDisqualified: boolean;
-  disqualificationReason: string | null;
-  isOnLeaderboard: boolean;
-  createdAt: Date;
-  customData: Record<string, string>; // For custom form fields
+  className: string; // e.g. "XI IPA 1"
+  number: number; // Candidate number, e.g. 1, 2, 3
+  vision: string;
+  mission: string;
+  photoUrl: string;
+  votes: number;
 };
 
-export type ContestInfoData = {
-    theme: string;
-    dates: string;
-    rules: string;
-    criteria: string;
-};
-
-export type AnnouncementBannerData = {
-    text: string;
-    isEnabled: boolean;
-};
-
-export type FormFieldDefinition = {
-    name: string; // Will be used as the key in customData
-    label: string;
-    type: 'text' | 'select' | 'file';
-    required: boolean;
-    options?: string[]; // For select type
+export type Voter = {
+  id: string; // Will be ObjectId string from MongoDB
+  identifier: string; // A unique identifier for the voter, e.g., student ID
+  hasVoted: boolean;
+  votedAt: Date;
 };

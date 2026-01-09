@@ -1,2 +1,2 @@
-// Flows will be imported for their side effects in this file.
-import "./flows/moderate-comment-flow";
+// This file is intentionally left empty for now.
+// Genkit flows can be imported here for development purposes.
