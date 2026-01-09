@@ -16,6 +16,5 @@ export type Voter = {
   identifier: string; // A unique identifier for the voter, e.g., student ID
   hasVoted: boolean;
   votedAt?: Date;
+  votedCandidateId?: ObjectId;
 };
-
-    

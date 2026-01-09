@@ -189,7 +189,7 @@ export async function castVote(formData: FormData) {
         
         await voters.updateOne(
             { _id: voter._id },
-            { $set: { hasVoted: true, votedAt: new Date() } }
+            { $set: { hasVoted: true, votedAt: new Date(), votedCandidateId: new ObjectId(candidateId) } }
         );
         
         const candidates = await getCandidatesCollection();
@@ -214,6 +214,28 @@ export async function getVoters(): Promise<Voter[]> {
     const votersFromDb = await collection.find({}).sort({ _id: -1 }).toArray();
     return votersFromDb.map(docToVoter);
 }
+
+export async function getVoterStatus(identifier: string) {
+    if (!identifier) {
+        return { hasVoted: false };
+    }
+    try {
+        const voters = await getVotersCollection();
+        const voter = await voters.findOne({ identifier: identifier });
+
+        if (!voter) {
+            return { hasVoted: false, message: "Token tidak ditemukan" };
+        }
+
+        return { 
+            hasVoted: voter.hasVoted,
+            votedCandidateId: voter.votedCandidateId?.toString() || null,
+        };
+    } catch (error) {
+        return { hasVoted: false, message: "Error saat memeriksa status pemilih" };
+    }
+}
+
 
 export async function addVoterTokens(tokens: string) {
     const tokenList = tokens.split('\n').map(t => t.trim()).filter(t => t);
@@ -299,7 +321,7 @@ export async function resetAllVotes() {
 
         // Reset hasVoted status on all voters, but keep the tokens
         const voters = await getVotersCollection();
-        await voters.updateMany({}, { $set: { hasVoted: false }, $unset: { votedAt: "" } });
+        await voters.updateMany({}, { $set: { hasVoted: false }, $unset: { votedAt: "", votedCandidateId: "" } });
         
         revalidateAll();
         return { success: true };
@@ -327,5 +349,3 @@ export async function resetAllData() {
         return { success: false, message: "Gagal mereset semua data pemilihan." };
     }
 }
-
-    

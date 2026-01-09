@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronRight, Users, Award, Info, X, Vote, LogIn, FileText, CheckCircle, HelpCircle, BarChart3, TrendingUp, Instagram, Twitter, Facebook, Mail, MapPin } from 'lucide-react';
-import { getCandidates, castVote } from '@/lib/actions';
+import { Check, ChevronRight, Users, Award, Info, X, Vote, LogIn, FileText, CheckCircle, HelpCircle, Instagram, Twitter, Facebook, Mail, MapPin } from 'lucide-react';
+import { getCandidates, castVote, getVoterStatus } from '@/lib/actions';
 import type { Candidate } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { useDebounce } from 'react-use';
+
 
 const FAQS = [
   { q: "Apakah pemilihan ini bersifat rahasia?", a: "Ya, sistem kami menjamin kerahasiaan pilihan Anda. Suara yang masuk tidak dapat dilacak kembali ke pemilih individu." },
@@ -95,6 +97,7 @@ export default function Home() {
   const [hasVoted, setHasVoted] = useState(false);
   const [votedId, setVotedId] = useState<string | null>(null);
   const [voterIdentifier, setVoterIdentifier] = useState("");
+  const [isCheckingVoter, setIsCheckingVoter] = useState(false);
 
   useEffect(() => {
     const fetchCandidates = async () => {
@@ -103,6 +106,33 @@ export default function Home() {
     };
     fetchCandidates();
   }, []);
+
+  const checkVoterStatus = useCallback(async (identifier: string) => {
+      if (!identifier) {
+        setHasVoted(false);
+        setVotedId(null);
+        return;
+      };
+      setIsCheckingVoter(true);
+      const status = await getVoterStatus(identifier);
+      if (status.hasVoted) {
+          setHasVoted(true);
+          setVotedId(status.votedCandidateId || null);
+          toast({
+              title: "Token Sudah Digunakan",
+              description: "Token ini sudah pernah digunakan untuk memilih.",
+          });
+      } else {
+          setHasVoted(false);
+          setVotedId(null);
+      }
+      setIsCheckingVoter(false);
+  }, [toast]);
+
+  useDebounce(() => {
+      checkVoterStatus(voterIdentifier);
+  }, 1000, [voterIdentifier, checkVoterStatus]);
+
 
   const openInfo = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
@@ -152,6 +182,9 @@ export default function Home() {
             description: result.message || "Terjadi kesalahan yang tidak diketahui.",
         });
         setModalType(null);
+        if (result.message?.includes("sudah digunakan")) {
+            setHasVoted(true);
+        }
     }
   };
 
@@ -291,9 +324,9 @@ export default function Home() {
                      </button>
                      <button
                         onClick={() => openVote(candidate)}
-                        disabled={hasVoted}
+                        disabled={hasVoted || isCheckingVoter}
                         className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border border-transparent flex items-center justify-center gap-2
-                          ${hasVoted
+                          ${(hasVoted || isCheckingVoter)
                             ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
                             : 'bg-white text-black hover:bg-blue-500 hover:text-white hover:border-blue-400'
                           }`}
@@ -315,10 +348,10 @@ export default function Home() {
                 id="voter-token-input"
                 type="text"
                 placeholder="Contoh: OSIS-VOTE-XXXX"
-                className="w-full text-center text-lg h-12 bg-neutral-800/50 border border-white/10 rounded-xl px-4 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full text-center text-lg h-12 bg-neutral-800/50 border border-white/10 rounded-xl px-4 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                 value={voterIdentifier}
                 onChange={(e) => setVoterIdentifier(e.target.value)}
-                disabled={hasVoted}
+                disabled={hasVoted || isCheckingVoter}
             />
           </div>
 
