@@ -29,7 +29,7 @@ import { Switch } from "./ui/switch";
 import { EditCandidateDialog } from "./edit-candidate-dialog";
 import { AddCandidateDialog } from "./add-candidate-dialog";
 import { motion } from "framer-motion";
-import { LayoutDashboard, Users, PieChart, Settings, LogOut, Vote, BarChart, AlertTriangle, Plus, Edit3, Trash2, TrendingUp, UserCheck, Clock, Search } from "lucide-react";
+import { LayoutDashboard, Users, PieChart, Settings, LogOut, Vote, BarChart, AlertTriangle, Plus, Edit3, Trash2, TrendingUp, UserCheck, Clock, Search, AlertCircle } from "lucide-react";
 
 
 interface AdminDashboardProps {
@@ -248,11 +248,7 @@ export function AdminDashboard({
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                             <div className="flex justify-between items-center mb-8">
                                 <h2 className="text-2xl font-bold text-white">Manajemen Kandidat</h2>
-                                <AddCandidateDialog onCandidateAdded={handleAddCandidateState}>
-                                    <Button className="bg-blue-600 text-white font-semibold rounded-lg text-sm hover:bg-blue-500 transition-colors flex items-center gap-2 shadow-lg shadow-blue-600/20">
-                                        <Plus size={16} /> Tambah Kandidat
-                                    </Button>
-                                </AddCandidateDialog>
+                                <AddCandidateDialog onCandidateAdded={handleAddCandidateState} />
                             </div>
                              <div className="bg-neutral-900 rounded-2xl border border-white/5">
                                 <Table>
