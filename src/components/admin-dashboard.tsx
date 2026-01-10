@@ -31,7 +31,7 @@ import { motion } from "framer-motion";
 import { LayoutDashboard, Users, PieChart, Settings, LogOut, Vote, AlertTriangle, Edit3, Trash2, UserCheck, Clock, Search, AlertCircle, Menu } from "lucide-react";
 import { VotersManager } from "./voters-manager";
 import { useToast } from "@/hooks/use-toast";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
 
 
 interface AdminDashboardProps {
@@ -253,6 +253,7 @@ export function AdminDashboard({
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" className="p-0 w-64 bg-neutral-950/95 backdrop-blur-xl border-r-white/5 flex flex-col">
+                            <SheetTitle className="sr-only">Menu Sidebar</SheetTitle>
                             <SidebarContent activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
                         </SheetContent>
                     </Sheet>
