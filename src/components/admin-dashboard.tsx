@@ -28,9 +28,10 @@ import { Switch } from "./ui/switch";
 import { EditCandidateDialog } from "./edit-candidate-dialog";
 import { AddCandidateDialog } from "./add-candidate-dialog";
 import { motion } from "framer-motion";
-import { LayoutDashboard, Users, PieChart, Settings, LogOut, Vote, AlertTriangle, Edit3, Trash2, UserCheck, Clock, Search, AlertCircle } from "lucide-react";
+import { LayoutDashboard, Users, PieChart, Settings, LogOut, Vote, AlertTriangle, Edit3, Trash2, UserCheck, Clock, Search, AlertCircle, Menu } from "lucide-react";
 import { VotersManager } from "./voters-manager";
 import { useToast } from "@/hooks/use-toast";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 
 
 interface AdminDashboardProps {
@@ -97,6 +98,32 @@ const SidebarItem = ({ icon, label, active, onClick }: { icon: React.ReactNode, 
         <span className="font-medium">{label}</span>
         {active && <motion.div layoutId="active-pill" className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400" />}
     </button>
+);
+
+const SidebarContent = ({ activeTab, setActiveTab, onLogout }: { activeTab: string, setActiveTab: (tab: string) => void, onLogout: () => void }) => (
+    <>
+        <div className="h-16 flex items-center gap-3 px-6 border-b border-white/5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm">A</div>
+            <span className="font-bold text-lg text-white tracking-tight">Admin Panel</span>
+        </div>
+
+        <div className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider px-2 mb-2">Menu Utama</div>
+            <SidebarItem icon={<LayoutDashboard size={18} />} label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
+            <SidebarItem icon={<Users size={18} />} label="Kandidat" active={activeTab === 'candidates'} onClick={() => setActiveTab('candidates')} />
+            <SidebarItem icon={<PieChart size={18} />} label="Data Pemilih" active={activeTab === 'voters'} onClick={() => setActiveTab('voters')} />
+            
+            <div className="mt-8 text-xs font-semibold text-neutral-500 uppercase tracking-wider px-2 mb-2">Sistem</div>
+            <SidebarItem icon={<Settings size={18} />} label="Pengaturan" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+        </div>
+
+        <div className="p-4 border-t border-white/5">
+            <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors">
+                <LogOut size={18} />
+                <span className="font-medium">Logout</span>
+            </button>
+        </div>
+    </>
 );
 
 
@@ -211,39 +238,33 @@ export function AdminDashboard({
     <div className="flex min-h-screen bg-neutral-950 text-neutral-200 font-['Plus_Jakarta_Sans'] selection:bg-blue-500/30 overflow-hidden">
         <div className="fixed inset-0 h-full w-full z-0 bg-neutral-950 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
         
-        <aside className="w-64 border-r border-white/5 bg-neutral-950/50 backdrop-blur-xl z-20 flex flex-col relative">
-            <div className="h-16 flex items-center gap-3 px-6 border-b border-white/5">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm">A</div>
-                <span className="font-bold text-lg text-white tracking-tight">Admin Panel</span>
-            </div>
-
-            <div className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-                <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider px-2 mb-2">Menu Utama</div>
-                <SidebarItem icon={<LayoutDashboard size={18} />} label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
-                <SidebarItem icon={<Users size={18} />} label="Kandidat" active={activeTab === 'candidates'} onClick={() => setActiveTab('candidates')} />
-                <SidebarItem icon={<PieChart size={18} />} label="Data Pemilih" active={activeTab === 'voters'} onClick={() => setActiveTab('voters')} />
-                
-                <div className="mt-8 text-xs font-semibold text-neutral-500 uppercase tracking-wider px-2 mb-2">Sistem</div>
-                <SidebarItem icon={<Settings size={18} />} label="Pengaturan" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
-            </div>
-
-            <div className="p-4 border-t border-white/5">
-                <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors">
-                    <LogOut size={18} />
-                    <span className="font-medium">Logout</span>
-                </button>
-            </div>
+        <aside className="w-64 border-r border-white/5 bg-neutral-950/50 backdrop-blur-xl z-20 flex-col relative hidden md:flex">
+            <SidebarContent activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
         </aside>
 
         <main className="flex-1 flex flex-col relative z-10 h-screen overflow-hidden">
-            <header className="h-16 border-b border-white/5 bg-neutral-950/50 backdrop-blur-md flex items-center justify-between px-8 shrink-0">
-                <div className="flex items-center gap-2 text-sm text-neutral-400">
-                    <span>Dashboard</span>
-                    <span className="text-neutral-600">/</span>
-                    <span className="text-white capitalize">{activeTab}</span>
+            <header className="h-16 border-b border-white/5 bg-neutral-950/50 backdrop-blur-md flex items-center justify-between px-4 md:px-8 shrink-0">
+                 <div className="flex items-center gap-2">
+                    <Sheet>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon" className="md:hidden">
+                                <Menu />
+                                <span className="sr-only">Buka Menu</span>
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left" className="p-0 w-64 bg-neutral-950/95 backdrop-blur-xl border-r-white/5 flex flex-col">
+                            <SidebarContent activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
+                        </SheetContent>
+                    </Sheet>
+                    <div className="text-sm text-neutral-400 hidden md:flex items-center gap-2">
+                         <span>Dashboard</span>
+                        <span className="text-neutral-600">/</span>
+                        <span className="text-white capitalize">{activeTab}</span>
+                    </div>
                 </div>
+
                 <div className="flex items-center gap-4">
-                     <div className="relative">
+                     <div className="relative hidden md:block">
                         <input type="text" placeholder="Cari data..." className="bg-neutral-900 border border-white/10 rounded-full pl-10 pr-4 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-colors w-64"/>
                         <Search className="absolute left-3.5 top-2 text-neutral-500" size={14} />
                     </div>
@@ -251,7 +272,7 @@ export function AdminDashboard({
                 </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-8">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8">
                 <div className="max-w-7xl mx-auto">
                     {activeTab === 'overview' && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
@@ -289,7 +310,7 @@ export function AdminDashboard({
                                 <h2 className="text-2xl font-bold text-white">Manajemen Kandidat</h2>
                                 <AddCandidateDialog onCandidateAdded={handleAddCandidateState} />
                             </div>
-                             <div className="bg-neutral-900 rounded-2xl border border-white/5">
+                             <div className="bg-neutral-900 rounded-2xl border border-white/5 overflow-x-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow className="border-b-white/10 hover:bg-neutral-900">
