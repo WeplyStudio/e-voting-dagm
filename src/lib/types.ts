@@ -1,5 +1,3 @@
-import type { ObjectId } from "mongodb";
-
 export type Candidate = {
   id: string; // Will be ObjectId string from MongoDB
   name: string;
@@ -16,5 +14,5 @@ export type Voter = {
   identifier: string; // A unique identifier for the voter, e.g., student ID
   hasVoted: boolean;
   votedAt?: Date;
-  votedCandidateId?: ObjectId;
+  votedCandidateId?: string; // This is now a string to be serializable
 };

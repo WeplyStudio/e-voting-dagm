@@ -24,12 +24,13 @@ function docToCandidate(doc: any): Candidate {
 
 function docToVoter(doc: any): Voter {
     if (!doc) return doc;
-    const { _id, ...rest } = doc;
+    const { _id, votedCandidateId, ...rest } = doc;
     
     return {
         ...rest,
         id: _id.toString(),
         hasVoted: doc.hasVoted || false,
+        votedCandidateId: votedCandidateId ? votedCandidateId.toString() : undefined,
     } as Voter;
 }
 
