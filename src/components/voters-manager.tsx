@@ -30,7 +30,6 @@ interface VotersManagerProps {
 
 export function VotersManager({ initialVoters, onVotersUpdated }: VotersManagerProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [voters, setVoters] = useState(initialVoters);
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -114,7 +113,7 @@ export function VotersManager({ initialVoters, onVotersUpdated }: VotersManagerP
           <CardHeader>
             <CardTitle>Daftar Pemilih Terdaftar</CardTitle>
             <CardDescription>
-              Total {voters.length} pemilih terdaftar di sistem.
+              Total {initialVoters.length} pemilih terdaftar di sistem.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -128,7 +127,7 @@ export function VotersManager({ initialVoters, onVotersUpdated }: VotersManagerP
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {voters.map((voter) => (
+                    {initialVoters.map((voter) => (
                     <TableRow key={voter.id} className="border-b-white/5">
                         <TableCell className="font-mono">{voter.identifier}</TableCell>
                         <TableCell>
@@ -151,7 +150,7 @@ export function VotersManager({ initialVoters, onVotersUpdated }: VotersManagerP
                     ))}
                 </TableBody>
                 </Table>
-                 {voters.length === 0 && (
+                 {initialVoters.length === 0 && (
                     <div className="text-center p-8 text-muted-foreground">
                         Belum ada token pemilih yang ditambahkan.
                     </div>
@@ -163,4 +162,3 @@ export function VotersManager({ initialVoters, onVotersUpdated }: VotersManagerP
     </div>
   );
 }
-    
