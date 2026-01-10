@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Image from "next/image";
 import type { Candidate, Voter } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,14 +22,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { deleteCandidate, setVotingStatus, setShowResultsStatus, resetAllVotes, getVoters } from "@/lib/actions";
+import { deleteCandidate, setVotingStatus, setShowResultsStatus, resetAllVotes, getVoters, resetAllData } from "@/lib/actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Switch } from "./ui/switch";
 import { EditCandidateDialog } from "./edit-candidate-dialog";
 import { AddCandidateDialog } from "./add-candidate-dialog";
 import { motion } from "framer-motion";
-import { LayoutDashboard, Users, PieChart, Settings, LogOut, Vote, BarChart, AlertTriangle, Plus, Edit3, Trash2, TrendingUp, UserCheck, Clock, Search, AlertCircle } from "lucide-react";
+import { LayoutDashboard, Users, PieChart, Settings, LogOut, Vote, AlertTriangle, Edit3, Trash2, UserCheck, Clock, Search, AlertCircle } from "lucide-react";
 import { VotersManager } from "./voters-manager";
+import { useToast } from "@/hooks/use-toast";
 
 
 interface AdminDashboardProps {
@@ -107,6 +107,7 @@ export function AdminDashboard({
     initialShowResultsStatus,
     onLogout
 }: AdminDashboardProps) {
+  const { toast } = useToast();
   const [candidates, setCandidates] = useState<Candidate[]>(initialCandidates);
   const [voters, setVoters] = useState<Voter[]>(initialVoters);
   const [votingOpen, setVotingOpen] = useState(initialVotingStatus);
@@ -138,7 +139,10 @@ export function AdminDashboard({
   const handleDelete = async (candidateId: string) => {
     const result = await deleteCandidate(candidateId);
     if (result.success) {
+        toast({ title: "Kandidat berhasil dihapus" });
         setCandidates(prev => prev.filter(c => c.id !== candidateId));
+    } else {
+        toast({ variant: "destructive", title: "Gagal menghapus", description: result.message });
     }
   };
 
@@ -146,6 +150,9 @@ export function AdminDashboard({
     const result = await setVotingStatus(checked);
     if (result.success) {
         setVotingOpen(result.newState);
+        toast({ title: `Sesi voting telah ${result.newState ? 'dibuka' : 'ditutup'}`});
+    } else {
+        toast({ variant: "destructive", title: "Gagal mengubah status", description: result.message });
     }
   };
 
@@ -153,14 +160,33 @@ export function AdminDashboard({
     const result = await setShowResultsStatus(checked);
     if (result.success) {
         setShowResults(result.newState);
+        toast({ title: `Halaman hasil telah ${result.newState ? 'ditampilkan' : 'disembunyikan'}`});
+    } else {
+        toast({ variant: "destructive", title: "Gagal mengubah status", description: result.message });
     }
   };
   
   const handleResetVotes = async () => {
     const result = await resetAllVotes();
     if (result.success) {
+        toast({ title: "Semua suara berhasil direset." });
         setCandidates(prev => prev.map(c => ({ ...c, votes: 0 })));
-        setVoters(prev => prev.map(v => ({ ...v, hasVoted: false, votedAt: undefined })));
+        setVoters(prev => prev.map(v => ({ ...v, hasVoted: false, votedAt: undefined, votedCandidateId: undefined })));
+    } else {
+        toast({ variant: "destructive", title: "Gagal mereset suara", description: result.message });
+    }
+  }
+  
+  const handleResetAllData = async () => {
+    const result = await resetAllData();
+    if (result.success) {
+        toast({ title: "Semua data pemilihan berhasil dihapus." });
+        setCandidates([]);
+        setVoters([]);
+        setVotingOpen(false);
+        setShowResults(false);
+    } else {
+        toast({ variant: "destructive", title: "Gagal mereset data", description: result.message });
     }
   }
 
@@ -266,7 +292,7 @@ export function AdminDashboard({
                              <div className="bg-neutral-900 rounded-2xl border border-white/5">
                                 <Table>
                                     <TableHeader>
-                                        <TableRow className="border-b-white/10">
+                                        <TableRow className="border-b-white/10 hover:bg-neutral-900">
                                             <TableHead className="w-[80px]">No. Urut</TableHead>
                                             <TableHead>Nama Kandidat</TableHead>
                                             <TableHead>Kelas</TableHead>
@@ -276,37 +302,39 @@ export function AdminDashboard({
                                     </TableHeader>
                                     <TableBody>
                                         {candidates.sort((a,b) => a.number - b.number).map((candidate) => (
-                                            <TableRow key={candidate.id} className="border-b-white/5">
+                                            <TableRow key={candidate.id} className="border-b-white/5 hover:bg-neutral-800/50">
                                                 <TableCell className="font-bold text-lg">{candidate.number}</TableCell>
                                                 <TableCell className="font-medium">{candidate.name}</TableCell>
                                                 <TableCell>{candidate.className}</TableCell>
                                                 <TableCell>{candidate.votes}</TableCell>
                                                 <TableCell className="text-right">
-                                                    <AlertDialog>
+                                                    <div className="inline-flex rounded-lg border border-white/10 bg-neutral-900/50 p-1">
                                                         <EditCandidateDialog candidate={candidate} onCandidateUpdate={handleUpdateCandidateState}>
-                                                             <Button variant="ghost" size="icon" className="text-neutral-400 hover:text-blue-400"><Edit3 size={16} /></Button>
+                                                             <Button variant="ghost" size="icon" className="text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10"><Edit3 size={16} /></Button>
                                                         </EditCandidateDialog>
-                                                        <AlertDialogTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="text-neutral-400 hover:text-red-400"><Trash2 size={16} /></Button>
-                                                        </AlertDialogTrigger>
-                                                        <AlertDialogContent>
-                                                            <AlertDialogHeader>
-                                                                <AlertDialogTitle>Anda yakin?</AlertDialogTitle>
-                                                                <AlertDialogDescription>Tindakan ini akan menghapus kandidat "{candidate.name}" secara permanen.</AlertDialogDescription>
-                                                            </AlertDialogHeader>
-                                                            <AlertDialogFooter>
-                                                                <AlertDialogCancel>Batal</AlertDialogCancel>
-                                                                <AlertDialogAction onClick={() => handleDelete(candidate.id)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
-                                                            </AlertDialogFooter>
-                                                        </AlertDialogContent>
-                                                    </AlertDialog>
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="text-neutral-400 hover:text-red-400 hover:bg-red-500/10"><Trash2 size={16} /></Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>Anda yakin?</AlertDialogTitle>
+                                                                    <AlertDialogDescription>Tindakan ini akan menghapus kandidat "{candidate.name}" secara permanen.</AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                                                                    <AlertDialogAction onClick={() => handleDelete(candidate.id)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
                                 </Table>
                                  {candidates.length === 0 && (
-                                    <div className="text-center p-8 text-muted-foreground">
+                                    <div className="text-center p-12 text-neutral-500">
                                         Belum ada kandidat yang ditambahkan.
                                     </div>
                                 )}
@@ -347,27 +375,52 @@ export function AdminDashboard({
                                 </Card>
                                  <Card className="border-destructive/30 bg-destructive/5">
                                     <CardHeader>
-                                        <CardTitle className="text-destructive">Zona Berbahaya</CardTitle>
-                                        <CardDescription>Tindakan di bawah ini tidak dapat diurungkan.</CardDescription>
+                                        <CardTitle className="text-red-400 flex items-center gap-2"><AlertTriangle /> Zona Berbahaya</CardTitle>
+                                        <CardDescription className="text-red-400/70">Tindakan di bawah ini memiliki dampak besar dan tidak dapat diurungkan.</CardDescription>
                                     </CardHeader>
-                                    <CardContent>
-                                         <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                 <Button variant="destructive" className="w-full sm:w-auto">
-                                                    <AlertTriangle className="mr-2" size={16}/> Reset Semua Data Pemilihan
-                                                 </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Anda Yakin Ingin Mereset Semua Data?</AlertDialogTitle>
-                                                    <AlertDialogDescription>Ini akan menghapus SEMUA suara yang telah masuk dan SEMUA token pemilih yang terdaftar. Gunakan ini hanya untuk memulai sesi pemilihan dari awal.</AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={handleResetVotes} className="bg-destructive hover:bg-destructive/90">Ya, Reset Sekarang</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg bg-red-900/20 border border-red-500/20">
+                                            <div>
+                                                 <h4 className="font-semibold text-white">Reset Semua Suara</h4>
+                                                <p className="text-sm text-red-400/70 max-w-lg">Aksi ini akan mengatur ulang semua perolehan suara menjadi 0 dan status semua pemilih menjadi 'Belum Memilih'. Gunakan untuk simulasi atau memulai ulang sesi voting.</p>
+                                            </div>
+                                             <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="destructive" className="mt-4 sm:mt-0 shrink-0">Reset Suara</Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Anda Yakin Ingin Mereset Suara?</AlertDialogTitle>
+                                                        <AlertDialogDescription>Ini akan menghapus SEMUA suara yang telah masuk, tapi TIDAK akan menghapus data kandidat atau pemilih terdaftar.</AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={handleResetVotes} className="bg-destructive hover:bg-destructive/90">Ya, Reset Suara</AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        </div>
+                                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg bg-red-900/20 border border-red-500/20">
+                                            <div>
+                                                 <h4 className="font-semibold text-white">Reset Semua Data Pemilihan</h4>
+                                                <p className="text-sm text-red-400/70 max-w-lg">Aksi ini akan menghapus SEMUA kandidat, SEMUA pemilih terdaftar, dan SEMUA suara. Gunakan hanya untuk persiapan pemilihan periode berikutnya.</p>
+                                            </div>
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="destructive" className="mt-4 sm:mt-0 shrink-0">Reset Semua Data</Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>ANDA SANGAT YAKIN?</AlertDialogTitle>
+                                                        <AlertDialogDescription>Tindakan ini akan menghapus SELURUH data aplikasi. Data tidak dapat dipulihkan. Ini sama seperti menginstal ulang aplikasi dari awal.</AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={handleResetAllData} className="bg-destructive hover:bg-destructive/90">Ya, Hapus Semua Data</AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        </div>
                                     </CardContent>
                                 </Card>
                             </div>
@@ -379,5 +432,3 @@ export function AdminDashboard({
     </div>
   );
 }
-
-    

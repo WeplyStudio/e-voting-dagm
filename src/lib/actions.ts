@@ -9,8 +9,6 @@ import type { Candidate, Voter } from "./types";
 
 function revalidateAll() {
     revalidatePath("/", "layout");
-    revalidatePath("/admin");
-    revalidatePath("/leaderboard");
 }
 
 function docToCandidate(doc: any): Candidate {
@@ -86,15 +84,17 @@ export async function addCandidate(formData: FormData) {
 
         const photoUrl = await fileToDataUri(photoFile);
 
-        await collection.insertOne({
+        const result = await collection.insertOne({
             ...parsed.data,
             photoUrl: photoUrl,
             votes: 0,
             createdAt: new Date(),
         });
+        
+        const newCandidate = await collection.findOne({_id: result.insertedId});
 
         revalidateAll();
-        return { success: true };
+        return { success: true, newCandidate: docToCandidate(newCandidate) };
     } catch (error) {
         console.error("Gagal menambah kandidat:", error);
         return { success: false, message: "Terjadi kesalahan pada server." };
@@ -115,6 +115,12 @@ export async function updateCandidate(candidateId: string, formData: FormData) {
 
     try {
         const collection = await getCandidatesCollection();
+        
+        const existingWithNumber = await collection.findOne({ number: parsed.data.number, _id: { $ne: new ObjectId(candidateId) } });
+        if (existingWithNumber) {
+            return { success: false, message: `Nomor urut ${parsed.data.number} sudah digunakan oleh kandidat lain.` };
+        }
+        
         const updateData: any = { ...parsed.data };
         
         const photoFile = formData.get('photo') as File | null;
@@ -141,6 +147,9 @@ export async function updateCandidate(candidateId: string, formData: FormData) {
 
 
 export async function deleteCandidate(candidateId: string) {
+    if (!ObjectId.isValid(candidateId)) {
+        return { success: false, message: "ID Kandidat tidak valid." };
+    }
     try {
         const collection = await getCandidatesCollection();
         await collection.deleteOne({ _id: new ObjectId(candidateId) });
@@ -253,13 +262,14 @@ export async function addVoterTokens(tokens: string) {
             .map(token => ({
                 identifier: token,
                 hasVoted: false,
+                createdAt: new Date(),
             }));
 
         if (newTokens.length > 0) {
             await voters.insertMany(newTokens);
         }
 
-        revalidatePath("/admin");
+        revalidateAll();
         return { success: true, added: newTokens.length, duplicates: existingIdentifiers.size };
     } catch (error) {
         console.error("Gagal menambah token pemilih:", error);

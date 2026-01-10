@@ -56,7 +56,7 @@ export function AddCandidateDialog({ onCandidateAdded }: AddCandidateDialogProps
     defaultValues: {
       name: "",
       className: "",
-      number: "" as any, // Use empty string to avoid uncontrolled input error
+      number: "" as any,
       vision: "",
       mission: "",
       photo: undefined,
@@ -78,14 +78,11 @@ export function AddCandidateDialog({ onCandidateAdded }: AddCandidateDialogProps
 
     const result = await addCandidate(formData);
 
-    if (result.success) {
+    if (result.success && result.newCandidate) {
       toast({
         title: "Kandidat Berhasil Ditambahkan!",
       });
-      // This is a bit of a hack, we don't get the full candidate object back
-      // A full refresh or more complex state management would be better.
-      // For now, we'll just close and let the parent re-fetch.
-      window.location.reload(); 
+      onCandidateAdded(result.newCandidate);
       setOpen(false);
       form.reset();
     } else {

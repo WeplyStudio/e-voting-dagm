@@ -59,7 +59,7 @@ export function EditCandidateDialog({ children, candidate, onCandidateUpdate }: 
     defaultValues: {
       name: candidate.name || "",
       className: candidate.className || "",
-      number: candidate.number || ("" as any),
+      number: candidate.number || "" as any,
       vision: candidate.vision || "",
       mission: candidate.mission || "",
     },
