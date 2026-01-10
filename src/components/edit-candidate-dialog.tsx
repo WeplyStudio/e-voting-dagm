@@ -57,11 +57,11 @@ export function EditCandidateDialog({ children, candidate, onCandidateUpdate }: 
   const form = useForm<CandidateFormValues>({
     resolver: zodResolver(candidateSchema),
     defaultValues: {
-      name: candidate.name,
-      className: candidate.className,
-      number: candidate.number,
-      vision: candidate.vision,
-      mission: candidate.mission,
+      name: candidate.name || "",
+      className: candidate.className || "",
+      number: candidate.number || ("" as any),
+      vision: candidate.vision || "",
+      mission: candidate.mission || "",
     },
   });
 
