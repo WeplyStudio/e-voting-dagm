@@ -44,12 +44,15 @@ export default function AdminPage() {
   });
 
   useEffect(() => {
-    const cookie = document.cookie.split('; ').find(row => row.startsWith(`${AUTH_COOKIE_NAME}=`));
-    if (cookie?.split('=')[1] === 'true') {
-      setIsAuthenticated(true);
-    } else {
-      setLoading(false);
-    }
+    const checkAuthCookie = () => {
+        const cookie = document.cookie.split('; ').find(row => row.startsWith(`${AUTH_COOKIE_NAME}=`));
+        if (cookie?.split('=')[1] === 'true') {
+          setIsAuthenticated(true);
+        } else {
+          setLoading(false); // Only stop loading if not authenticated
+        }
+    };
+    checkAuthCookie();
   }, []);
   
   useEffect(() => {
@@ -101,7 +104,7 @@ export default function AdminPage() {
     setVoters(null);
     setVotingStatus(null);
     setShowResultsStatus(null);
-    setLoading(false);
+    // No need to set loading, will go back to login form
   }
 
   if (loading) {
