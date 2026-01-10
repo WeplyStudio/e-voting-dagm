@@ -523,12 +523,6 @@ const Footer = () => {
                                 </div>
                                 <span className="leading-relaxed">Jl. D.I. Panjaitan No.9, Melayu Kota Piring, Kec. Tanjungpinang Tim., Kota Tanjung Pinang, Kepulauan Riau 29125</span>
                             </li>
-                            <li className="flex items-center gap-3 group">
-                                <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0 group-hover:bg-purple-500/20 transition-colors">
-                                    <Mail size={16} className="text-purple-400" />
-                                </div>
-                                <span>panitia@osis-sekolah.sch.id</span>
-                            </li>
                         </ul>
                     </div>
                 </div>
