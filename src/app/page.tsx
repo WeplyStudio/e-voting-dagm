@@ -64,20 +64,20 @@ const Modal = ({ isOpen, onClose, title, children, actions }: {isOpen: boolean, 
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            className="relative w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl overflow-hidden"
+            className="relative w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl flex flex-col max-h-[80vh]"
           >
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500" />
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center p-6 flex-shrink-0">
               <h3 className="text-2xl font-bold text-white tracking-tight">{title}</h3>
               <button onClick={onClose} className="text-neutral-400 hover:text-white transition-colors">
                 <X size={24} />
               </button>
             </div>
-            <div className="text-neutral-300">
+            <div className="overflow-y-auto px-6 pb-6 text-neutral-300">
               {children}
             </div>
             {actions && (
-              <div className="mt-8 flex justify-end gap-3">
+              <div className="p-6 pt-0 flex justify-end gap-3 flex-shrink-0">
                 {actions}
               </div>
             )}
