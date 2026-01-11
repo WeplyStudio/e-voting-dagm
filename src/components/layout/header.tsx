@@ -39,7 +39,7 @@ export function Header() {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold">
               E
           </div>
-          <span className="font-bold text-lg tracking-tight text-white">E-Voting OSIS</span>
+          <span className="font-bold text-lg tracking-tight text-white">E-Voting DAGM</span>
         </Link>
         <div className="hidden md:flex flex-1 items-center space-x-2">
            <Link href="/leaderboard" className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white transition-colors">Hasil Suara</Link>

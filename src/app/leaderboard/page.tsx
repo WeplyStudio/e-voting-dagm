@@ -13,10 +13,10 @@ const Footer = () => {
                     <div className="col-span-1 md:col-span-2 space-y-4">
                         <a href="/" className="flex items-center gap-2 cursor-pointer">
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold">E</div>
-                            <span className="font-bold text-xl text-white tracking-tight">E-Voting OSIS</span>
+                            <span className="font-bold text-xl text-white tracking-tight">E-Voting DAGM</span>
                         </a>
                         <p className="text-neutral-400 leading-relaxed max-w-sm">
-                            Platform pemilihan Ketua OSIS masa depan yang jujur, adil, dan transparan. Suara Anda menentukan arah kemajuan sekolah kita.
+                            Platform pemilihan Ketua DAGM masa depan yang jujur, adil, dan transparan. Suara Anda menentukan arah kemajuan komunitas kita.
                         </p>
                         <div className="flex gap-4 pt-2">
                             <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-neutral-400 hover:bg-blue-600 hover:text-white transition-all border border-white/5 hover:border-blue-500/50">
@@ -46,20 +46,14 @@ const Footer = () => {
                                 <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0 group-hover:bg-blue-500/20 transition-colors">
                                     <MapPin size={16} className="text-blue-400" />
                                 </div>
-                                <span className="leading-relaxed">Jl. Pendidikan No. 123, Gedung OSIS Lt. 2, Jakarta Selatan</span>
-                            </li>
-                            <li className="flex items-center gap-3 group">
-                                <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0 group-hover:bg-purple-500/20 transition-colors">
-                                    <Mail size={16} className="text-purple-400" />
-                                </div>
-                                <span>panitia@osis-sekolah.sch.id</span>
+                                <span className="leading-relaxed">Jl. D.I. Panjaitan No.9, Melayu Kota Piring, Kec. Tanjungpinang Tim., Kota Tanjung Pinang, Kepulauan Riau 29125</span>
                             </li>
                         </ul>
                     </div>
                 </div>
 
                 <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-neutral-500">
-                    <p>© 2024 Komisi Pemilihan OSIS. All rights reserved.</p>
+                    <p>© 2024 Komisi Pemilihan DAGM. All rights reserved.</p>
                     <div className="flex flex-wrap justify-center items-center gap-6 text-xs font-medium uppercase tracking-wider">
                         <span className="flex items-center gap-1 normal-case tracking-normal border-l border-white/10 pl-6">
                             Made with <span className="text-red-500 animate-pulse">♥</span> by Tim IT
@@ -83,7 +77,7 @@ export default async function ResultsPage() {
         <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary">Hasil Perolehan Suara</h1>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Perhitungan suara pemilihan ketua OSIS periode 2024-2025.
+              Perhitungan suara pemilihan ketua DAGM periode 2024-2025.
             </p>
         </div>
 

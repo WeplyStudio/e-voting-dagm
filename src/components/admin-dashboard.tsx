@@ -264,7 +264,7 @@ export function AdminDashboard({
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
                             <div>
                                 <h1 className="text-3xl font-bold text-white mb-2">Selamat Datang, Admin!</h1>
-                                <p className="text-neutral-400">Berikut adalah laporan real-time pemilihan OSIS.</p>
+                                <p className="text-neutral-400">Berikut adalah laporan real-time pemilihan DAGM.</p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

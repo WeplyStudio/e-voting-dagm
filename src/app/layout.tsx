@@ -3,8 +3,8 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: "E-Voting OSIS",
-  description: "Platform e-voting untuk pemilihan ketua OSIS.",
+  title: "E-Voting DAGM",
+  description: "Platform e-voting untuk pemilihan ketua DAGM (Komunitas Aspirasi Generasi Muda).",
 };
 
 export default function RootLayout({

@@ -201,7 +201,7 @@ export default function Home() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold">
               E
             </div>
-            <span className="font-bold text-lg tracking-tight text-white">E-Voting OSIS</span>
+            <span className="font-bold text-lg tracking-tight text-white">E-Voting DAGM</span>
           </a>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
             <a href="/leaderboard" className="hover:text-white transition-colors">Hasil Suara</a>
@@ -228,7 +228,7 @@ export default function Home() {
             <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight leading-[1.1] mb-6">
               Tentukan Masa Depan <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400">
-                Sekolah Kita.
+                Komunitas Kita.
               </span>
             </h1>
             <p className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto leading-relaxed">
@@ -475,10 +475,10 @@ const Footer = () => {
                     <div className="col-span-1 md:col-span-2 space-y-4">
                         <a href="/" className="flex items-center gap-2 cursor-pointer">
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold">E</div>
-                            <span className="font-bold text-xl text-white tracking-tight">E-Voting OSIS</span>
+                            <span className="font-bold text-xl text-white tracking-tight">E-Voting DAGM</span>
                         </a>
                         <p className="text-neutral-400 leading-relaxed max-w-sm">
-                            Platform pemilihan Ketua OSIS masa depan yang jujur, adil, dan transparan. Suara Anda menentukan arah kemajuan sekolah kita.
+                            Platform pemilihan Ketua DAGM masa depan yang jujur, adil, dan transparan. Suara Anda menentukan arah kemajuan komunitas kita.
                         </p>
                         <div className="flex gap-4 pt-2">
                             <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-neutral-400 hover:bg-blue-600 hover:text-white transition-all border border-white/5 hover:border-blue-500/50">
@@ -515,7 +515,7 @@ const Footer = () => {
                 </div>
 
                 <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-neutral-500">
-                    <p>© 2024 Komisi Pemilihan OSIS. All rights reserved.</p>
+                    <p>© 2024 Komisi Pemilihan DAGM. All rights reserved.</p>
                     <div className="flex flex-wrap justify-center items-center gap-6 text-xs font-medium uppercase tracking-wider">
                         <span className="flex items-center gap-1 normal-case tracking-normal border-l border-white/10 pl-6">
                             Made with <span className="text-red-500 animate-pulse">♥</span> by Tim IT
