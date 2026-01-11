@@ -2,26 +2,24 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronRight, Users, Award, Info, X, Vote, LogIn, FileText, CheckCircle, HelpCircle, Instagram, Twitter, Facebook, Mail, MapPin } from 'lucide-react';
+import { Check, ChevronRight, Users, Award, Info, X, Vote, Trophy, FileText, CheckCircle, HelpCircle, Instagram, Twitter, Facebook, Mail, MapPin } from 'lucide-react';
 import { getCandidates, castVote, getVoterStatus } from '@/lib/actions';
 import type { Candidate } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { useDebounce } from 'react-use';
-
 
 const FAQS = [
   { q: "Apakah pemilihan ini bersifat rahasia?", a: "Ya, sistem kami menjamin kerahasiaan pilihan Anda. Suara yang masuk tidak dapat dilacak kembali ke pemilih individu." },
   { q: "Bagaimana jika saya salah memilih calon?", a: "Pilihan yang sudah dikonfirmasi tidak dapat diubah kembali. Pastikan Anda membaca visi misi dengan seksama sebelum menekan tombol 'Ya, Saya Yakin'." },
-  { q: "Apakah saya bisa memilih jika tidak punya token?", a: "Token pemilih adalah syarat wajib untuk memberikan suara. Jika Anda belum menerima, silakan hubungi panitia pemilihan." },
+  { q: "Bagaimana cara kerja sistem ini?", a: "Sistem menyimpan penanda unik di browser Anda setelah Anda memilih. Ini untuk memastikan satu perangkat hanya bisa memberikan satu suara. Data ini tidak melacak identitas pribadi Anda." },
   { q: "Kapan hasil voting diumumkan?", a: "Hasil sementara dapat dilihat secara real-time di halaman Hasil Suara. Hasil resmi akan ditetapkan setelah sesi voting ditutup." }
 ];
 
 const STEPS = [
-  { icon: <LogIn size={24} />, title: "Dapatkan Token", desc: "Dapatkan token unik dari panitia pemilihan untuk bisa memberikan suara." },
   { icon: <FileText size={24} />, title: "Pelajari Kandidat", desc: "Baca visi misi setiap paslon. Jangan memilih seperti membeli kucing dalam karung." },
-  { icon: <Vote size={24} />, title: "Tentukan Pilihan", desc: "Klik tombol Vote pada kandidat pilihanmu. Satu akun hanya satu suara." },
-  { icon: <CheckCircle size={24} />, title: "Selesai", desc: "Anda akan mendapatkan notifikasi bahwa hak suara telah digunakan." }
+  { icon: <Vote size={24} />, title: "Tentukan Pilihan", desc: "Klik tombol Vote pada kandidat pilihanmu. Satu perangkat hanya untuk satu suara." },
+  { icon: <CheckCircle size={24} />, title: "Selesai", desc: "Anda akan mendapatkan notifikasi bahwa hak suara telah digunakan." },
+  { icon: <Trophy size={24} />, title: "Lihat Hasil", desc: "Pantau perolehan suara secara real-time di halaman Hasil Suara." }
 ];
 
 const Badge = ({ children, className }: {children: React.ReactNode, className?: string}) => (
@@ -89,6 +87,8 @@ const Modal = ({ isOpen, onClose, title, children, actions }: {isOpen: boolean, 
   );
 };
 
+const VOTER_ID_KEY = 'evoting-voter-id';
+
 export default function Home() {
   const { toast } = useToast();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -96,8 +96,8 @@ export default function Home() {
   const [modalType, setModalType] = useState<null | 'info' | 'vote'>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [votedId, setVotedId] = useState<string | null>(null);
-  const [voterIdentifier, setVoterIdentifier] = useState("");
-  const [isCheckingVoter, setIsCheckingVoter] = useState(false);
+  const [isCheckingVoter, setIsCheckingVoter] = useState(true);
+  const [voterIdentifier, setVoterIdentifier] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCandidates = async () => {
@@ -107,31 +107,33 @@ export default function Home() {
     fetchCandidates();
   }, []);
 
-  const checkVoterStatus = useCallback(async (identifier: string) => {
-      if (!identifier) {
-        setHasVoted(false);
-        setVotedId(null);
-        return;
-      };
-      setIsCheckingVoter(true);
-      const status = await getVoterStatus(identifier);
-      if (status.hasVoted) {
-          setHasVoted(true);
-          setVotedId(status.votedCandidateId || null);
-          toast({
-              title: "Token Sudah Digunakan",
-              description: "Token ini sudah pernah digunakan untuk memilih.",
-          });
-      } else {
-          setHasVoted(false);
-          setVotedId(null);
-      }
-      setIsCheckingVoter(false);
-  }, [toast]);
+  const getOrCreateVoterIdentifier = useCallback(() => {
+    let id = localStorage.getItem(VOTER_ID_KEY);
+    if (!id) {
+      id = `voter_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+      localStorage.setItem(VOTER_ID_KEY, id);
+    }
+    return id;
+  }, []);
 
-  useDebounce(() => {
-      checkVoterStatus(voterIdentifier);
-  }, 1000, [voterIdentifier, checkVoterStatus]);
+  useEffect(() => {
+    const checkVoter = async () => {
+        const id = localStorage.getItem(VOTER_ID_KEY);
+        setVoterIdentifier(id);
+        if (id) {
+            setIsCheckingVoter(true);
+            const status = await getVoterStatus(id);
+            if (status.hasVoted) {
+                setHasVoted(true);
+                setVotedId(status.votedCandidateId || null);
+            }
+            setIsCheckingVoter(false);
+        } else {
+            setIsCheckingVoter(false);
+        }
+    };
+    checkVoter();
+  }, []);
 
 
   const openInfo = (candidate: Candidate) => {
@@ -141,17 +143,6 @@ export default function Home() {
 
   const openVote = (candidate: Candidate) => {
     if (hasVoted) return;
-    if (!voterIdentifier.trim()) {
-        toast({
-            variant: "destructive",
-            title: "Token Pemilih Diperlukan",
-            description: "Silakan masukkan token Anda di bawah daftar kandidat sebelum memilih.",
-        });
-        const tokenInput = document.getElementById('voter-token-input');
-        tokenInput?.focus();
-        tokenInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return;
-    }
     setSelectedCandidate(candidate);
     setModalType('vote');
   };
@@ -159,9 +150,12 @@ export default function Home() {
   const confirmVote = async () => {
     if (!selectedCandidate) return;
 
+    const identifier = getOrCreateVoterIdentifier();
+    setVoterIdentifier(identifier);
+
     const formData = new FormData();
     formData.append('candidateId', selectedCandidate.id);
-    formData.append('voterIdentifier', voterIdentifier);
+    formData.append('voterIdentifier', identifier);
     
     const result = await castVote(formData);
 
@@ -175,6 +169,7 @@ export default function Home() {
             description: "Terima kasih telah berpartisipasi.",
             className: "bg-green-500 text-white"
         });
+        localStorage.setItem(`votedFor`, selectedCandidate.id);
     } else {
         toast({
             variant: "destructive",
@@ -338,22 +333,14 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="mt-16 max-w-md mx-auto text-center">
-            <h3 className="text-lg font-semibold text-white mb-3">Masukkan Token Pemilih Anda</h3>
-             <p className="text-neutral-400 text-sm mb-4">
-                    Gunakan token unik yang Anda terima dari panitia untuk memberikan suara.
-                </p>
-            <input
-                id="voter-token-input"
-                type="text"
-                placeholder="Contoh: OSIS-VOTE-XXXX"
-                className="w-full text-center text-lg h-12 bg-neutral-800/50 border border-white/10 rounded-xl px-4 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                value={voterIdentifier}
-                onChange={(e) => setVoterIdentifier(e.target.value)}
-                disabled={hasVoted || isCheckingVoter}
-            />
-          </div>
-
+          { hasVoted &&
+            <div className="mt-16 max-w-md mx-auto text-center p-6 bg-green-500/10 border border-green-500/20 rounded-2xl">
+              <h3 className="text-lg font-semibold text-green-400 mb-2">Anda Sudah Memilih</h3>
+              <p className="text-neutral-400 text-sm">
+                  Terima kasih atas partisipasi Anda. Suara Anda telah direkam dan tidak dapat diubah lagi dari perangkat ini.
+              </p>
+            </div>
+          }
         </div>
       </section>
 
@@ -539,3 +526,5 @@ const Footer = () => {
       </footer>
     )
 }
+
+    

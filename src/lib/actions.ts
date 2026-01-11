@@ -167,7 +167,7 @@ export async function deleteCandidate(candidateId: string) {
 
 const voteSchema = z.object({
   candidateId: z.string().refine(id => ObjectId.isValid(id)),
-  voterIdentifier: z.string().min(1, "Token pemilih tidak boleh kosong."),
+  voterIdentifier: z.string().min(1, "Pengenal pemilih tidak boleh kosong."),
 });
 
 export async function castVote(formData: FormData) {
@@ -188,18 +188,16 @@ export async function castVote(formData: FormData) {
     try {
         const voters = await getVotersCollection();
         const voter = await voters.findOne({ identifier: voterIdentifier });
-
-        if (!voter) {
-            return { success: false, message: 'Token pemilih tidak terdaftar.' };
+        
+        if (voter && voter.hasVoted) {
+            return { success: false, message: 'Anda sudah pernah memberikan suara dari perangkat ini.' };
         }
         
-        if (voter.hasVoted) {
-            return { success: false, message: 'Token ini sudah digunakan untuk memilih.' };
-        }
-        
+        // If voter doesn't exist or hasn't voted, upsert their vote
         await voters.updateOne(
-            { _id: voter._id },
-            { $set: { hasVoted: true, votedAt: new Date(), votedCandidateId: new ObjectId(candidateId) } }
+            { identifier: voterIdentifier },
+            { $set: { hasVoted: true, votedAt: new Date(), votedCandidateId: new ObjectId(candidateId) } },
+            { upsert: true }
         );
         
         const candidates = await getCandidatesCollection();
@@ -217,13 +215,7 @@ export async function castVote(formData: FormData) {
     }
 }
 
-// --- Voter Token Management ---
-
-export async function getVoters(): Promise<Voter[]> {
-    const collection = await getVotersCollection();
-    const votersFromDb = await collection.find({}).sort({ _id: -1 }).toArray();
-    return votersFromDb.map(docToVoter);
-}
+// --- Voter Status Management ---
 
 export async function getVoterStatus(identifier: string) {
     if (!identifier) {
@@ -234,7 +226,7 @@ export async function getVoterStatus(identifier: string) {
         const voter = await voters.findOne({ identifier: identifier });
 
         if (!voter) {
-            return { hasVoted: false, message: "Token tidak ditemukan" };
+            return { hasVoted: false, message: "Pemilih belum tercatat" };
         }
 
         return { 
@@ -246,37 +238,6 @@ export async function getVoterStatus(identifier: string) {
     }
 }
 
-
-export async function addVoterTokens(tokens: string) {
-    const tokenList = tokens.split('\n').map(t => t.trim()).filter(t => t);
-    if (tokenList.length === 0) {
-        return { success: false, message: "Tidak ada token untuk ditambahkan." };
-    }
-
-    try {
-        const voters = await getVotersCollection();
-        const existingTokens = await voters.find({ identifier: { $in: tokenList } }).toArray();
-        const existingIdentifiers = new Set(existingTokens.map(v => v.identifier));
-
-        const newTokens = tokenList
-            .filter(token => !existingIdentifiers.has(token))
-            .map(token => ({
-                identifier: token,
-                hasVoted: false,
-                createdAt: new Date(),
-            }));
-
-        if (newTokens.length > 0) {
-            await voters.insertMany(newTokens);
-        }
-
-        revalidateAll();
-        return { success: true, added: newTokens.length, duplicates: existingIdentifiers.size };
-    } catch (error) {
-        console.error("Gagal menambah token pemilih:", error);
-        return { success: false, message: 'Gagal memproses token.' };
-    }
-}
 
 // --- Global Settings ---
 
@@ -332,7 +293,7 @@ export async function resetAllVotes() {
 
         // Reset hasVoted status on all voters, but keep the tokens
         const voters = await getVotersCollection();
-        await voters.updateMany({}, { $set: { hasVoted: false }, $unset: { votedAt: "", votedCandidateId: "" } });
+        await voters.deleteMany({});
         
         revalidateAll();
         return { success: true };

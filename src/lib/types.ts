@@ -11,7 +11,7 @@ export type Candidate = {
 
 export type Voter = {
   id: string; // Will be ObjectId string from MongoDB
-  identifier: string; // A unique identifier for the voter, e.g., student ID
+  identifier: string; // A unique identifier for the voter, e.g., a generated UUID for the browser
   hasVoted: boolean;
   votedAt?: Date;
   votedCandidateId?: string; // This is now a string to be serializable

@@ -12,8 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";
-import { getCandidates, getVotingStatus, getShowResultsStatus, getVoters } from "@/lib/actions";
-import { Candidate, Voter } from "@/lib/types";
+import { getCandidates, getVotingStatus, getShowResultsStatus } from "@/lib/actions";
+import { Candidate } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const loginSchema = z.object({
@@ -29,7 +29,6 @@ const AUTH_COOKIE_NAME = "admin-authenticated";
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
-  const [voters, setVoters] = useState<Voter[] | null>(null);
   const [votingStatus, setVotingStatus] = useState<boolean | null>(null);
   const [showResultsStatus, setShowResultsStatus] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,12 +59,10 @@ export default function AdminPage() {
       setLoading(true);
       Promise.all([
         getCandidates(),
-        getVoters(),
         getVotingStatus(),
         getShowResultsStatus(),
-      ]).then(([candidatesData, votersData, votingStatusData, showResultsData]) => {
+      ]).then(([candidatesData, votingStatusData, showResultsData]) => {
             setCandidates(candidatesData);
-            setVoters(votersData);
             setVotingStatus(votingStatusData);
             setShowResultsStatus(showResultsData);
             setLoading(false);
@@ -101,7 +98,6 @@ export default function AdminPage() {
     document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0`;
     setIsAuthenticated(false);
     setCandidates(null);
-    setVoters(null);
     setVotingStatus(null);
     setShowResultsStatus(null);
     // No need to set loading, will go back to login form
@@ -115,10 +111,9 @@ export default function AdminPage() {
       );
   }
   
-  if (isAuthenticated && candidates !== null && voters !== null && votingStatus !== null && showResultsStatus !== null) {
+  if (isAuthenticated && candidates !== null && votingStatus !== null && showResultsStatus !== null) {
     return <AdminDashboard
         initialCandidates={candidates}
-        initialVoters={voters}
         initialVotingStatus={votingStatus} 
         initialShowResultsStatus={showResultsStatus}
         onLogout={handleLogout}

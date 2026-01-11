@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import type { Candidate, Voter } from "@/lib/types";
+import type { Candidate } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -22,21 +22,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { deleteCandidate, setVotingStatus, setShowResultsStatus, resetAllVotes, getVoters, resetAllData } from "@/lib/actions";
+import { deleteCandidate, setVotingStatus, setShowResultsStatus, resetAllVotes, resetAllData } from "@/lib/actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Switch } from "./ui/switch";
 import { EditCandidateDialog } from "./edit-candidate-dialog";
 import { AddCandidateDialog } from "./add-candidate-dialog";
 import { motion } from "framer-motion";
-import { LayoutDashboard, Users, PieChart, Settings, LogOut, Vote, AlertTriangle, Edit3, Trash2, UserCheck, Clock, Search, AlertCircle, Menu } from "lucide-react";
-import { VotersManager } from "./voters-manager";
+import { LayoutDashboard, Users, PieChart, Settings, LogOut, Vote, AlertTriangle, Edit3, Trash2, UserCheck, Clock, Search, Menu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
 
 
 interface AdminDashboardProps {
     initialCandidates: Candidate[];
-    initialVoters: Voter[];
     initialVotingStatus: boolean;
     initialShowResultsStatus: boolean;
     onLogout: () => void;
@@ -111,7 +109,6 @@ const SidebarContent = ({ activeTab, setActiveTab, onLogout }: { activeTab: stri
             <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider px-2 mb-2">Menu Utama</div>
             <SidebarItem icon={<LayoutDashboard size={18} />} label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
             <SidebarItem icon={<Users size={18} />} label="Kandidat" active={activeTab === 'candidates'} onClick={() => setActiveTab('candidates')} />
-            <SidebarItem icon={<PieChart size={18} />} label="Data Pemilih" active={activeTab === 'voters'} onClick={() => setActiveTab('voters')} />
             
             <div className="mt-8 text-xs font-semibold text-neutral-500 uppercase tracking-wider px-2 mb-2">Sistem</div>
             <SidebarItem icon={<Settings size={18} />} label="Pengaturan" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
@@ -129,14 +126,12 @@ const SidebarContent = ({ activeTab, setActiveTab, onLogout }: { activeTab: stri
 
 export function AdminDashboard({
     initialCandidates,
-    initialVoters,
     initialVotingStatus,
     initialShowResultsStatus,
     onLogout
 }: AdminDashboardProps) {
   const { toast } = useToast();
   const [candidates, setCandidates] = useState<Candidate[]>(initialCandidates);
-  const [voters, setVoters] = useState<Voter[]>(initialVoters);
   const [votingOpen, setVotingOpen] = useState(initialVotingStatus);
   const [showResults, setShowResults] = useState(initialShowResultsStatus);
   const [activeTab, setActiveTab] = useState('overview');
@@ -144,10 +139,8 @@ export function AdminDashboard({
   const stats = useMemo(() => {
     const totalCandidates = candidates.length;
     const totalVotes = candidates.reduce((acc, c) => acc + c.votes, 0);
-    const totalRegisteredVoters = voters.length;
-    const participation = totalRegisteredVoters > 0 ? Math.round((totalVotes / totalRegisteredVoters) * 100) : 0;
-    return { totalCandidates, totalVotes, totalRegisteredVoters, participation };
-  }, [candidates, voters]);
+    return { totalCandidates, totalVotes };
+  }, [candidates]);
 
   const sortedCandidates = useMemo(() => {
     return [...candidates].sort((a, b) => b.votes - a.votes);
@@ -198,7 +191,6 @@ export function AdminDashboard({
     if (result.success) {
         toast({ title: "Semua suara berhasil direset." });
         setCandidates(prev => prev.map(c => ({ ...c, votes: 0 })));
-        setVoters(prev => prev.map(v => ({ ...v, hasVoted: false, votedAt: undefined, votedCandidateId: undefined })));
     } else {
         toast({ variant: "destructive", title: "Gagal mereset suara", description: result.message });
     }
@@ -209,7 +201,6 @@ export function AdminDashboard({
     if (result.success) {
         toast({ title: "Semua data pemilihan berhasil dihapus." });
         setCandidates([]);
-        setVoters([]);
         setVotingOpen(false);
         setShowResults(false);
     } else {
@@ -218,8 +209,7 @@ export function AdminDashboard({
   }
 
     const DYNAMIC_STATS = [
-        { label: "Total Pemilih Terdaftar", value: String(stats.totalRegisteredVoters), change: "100%", icon: <Users size={20} className="text-blue-400" /> },
-        { label: "Total Suara Masuk", value: String(stats.totalVotes), change: `${stats.participation}%`, icon: <UserCheck size={20} className="text-green-400" /> },
+        { label: "Total Suara Masuk", value: String(stats.totalVotes), change: `Live`, icon: <UserCheck size={20} className="text-green-400" /> },
         { label: "Total Kandidat", value: `${stats.totalCandidates} Paslon`, change: "Final", icon: <Users size={20} className="text-purple-400" /> },
         { label: "Sesi Voting", value: votingOpen ? "Dibuka" : "Ditutup", change: "Live", icon: <Clock size={20} className="text-orange-400" /> },
     ];
@@ -229,11 +219,6 @@ export function AdminDashboard({
         return colors[index % colors.length];
     }
     
-    const onVotersUpdated = async () => {
-        const updatedVoters = await getVoters();
-        setVoters(updatedVoters);
-    }
-
   return (
     <div className="flex min-h-screen bg-neutral-950 text-neutral-200 font-['Plus_Jakarta_Sans'] selection:bg-blue-500/30 overflow-hidden">
         <div className="fixed inset-0 h-full w-full z-0 bg-neutral-950 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
@@ -282,7 +267,7 @@ export function AdminDashboard({
                                 <p className="text-neutral-400">Berikut adalah laporan real-time pemilihan OSIS.</p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {DYNAMIC_STATS.map((stat, idx) => (
                                     <StatCard key={idx} label={stat.label} value={stat.value} change={stat.change} icon={stat.icon} />
                                 ))}
@@ -361,11 +346,6 @@ export function AdminDashboard({
                                     </div>
                                 )}
                             </div>
-                        </motion.div>
-                    )}
-                     {activeTab === 'voters' && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                           <VotersManager initialVoters={voters} onVotersUpdated={onVotersUpdated} />
                         </motion.div>
                     )}
 
