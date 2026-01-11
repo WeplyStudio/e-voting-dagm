@@ -1,7 +1,7 @@
 
 import { ResultsDisplay } from "@/components/results-display";
 import { getCandidates, getShowResultsStatus } from "@/lib/actions";
-import { Lock, Instagram, Twitter, Facebook, Mail, MapPin, ChevronRight, Vote } from "lucide-react";
+import { Lock, Instagram, Twitter, Facebook, Mail, MapPin, ChevronRight, Vote, Users } from "lucide-react";
 import Link from "next/link";
 import { Header } from "@/components/layout/header";
 
@@ -12,7 +12,6 @@ const Footer = () => {
                 <div className="grid md:grid-cols-4 gap-12 mb-16">
                     <div className="col-span-1 md:col-span-2 space-y-4">
                         <a href="/" className="flex items-center gap-2 cursor-pointer">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold">E</div>
                             <span className="font-bold text-xl text-white tracking-tight">E-Voting DAGM</span>
                         </a>
                         <p className="text-neutral-400 leading-relaxed max-w-sm">

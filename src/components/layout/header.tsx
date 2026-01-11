@@ -36,9 +36,6 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-neutral-950/50 backdrop-blur-md">
       <div className="container flex h-16 items-center">
         <Link href="/" className="mr-8 flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold">
-              E
-          </div>
           <span className="font-bold text-lg tracking-tight text-white">E-Voting DAGM</span>
         </Link>
         <div className="hidden md:flex flex-1 items-center space-x-2">

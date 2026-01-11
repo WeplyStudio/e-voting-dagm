@@ -198,9 +198,6 @@ export default function Home() {
       <nav className="relative z-40 border-b border-white/5 backdrop-blur-md bg-neutral-950/50 sticky top-0">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2 cursor-pointer">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold">
-              E
-            </div>
             <span className="font-bold text-lg tracking-tight text-white">E-Voting DAGM</span>
           </a>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
@@ -474,7 +471,6 @@ const Footer = () => {
                 <div className="grid md:grid-cols-4 gap-12 mb-16">
                     <div className="col-span-1 md:col-span-2 space-y-4">
                         <a href="/" className="flex items-center gap-2 cursor-pointer">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold">E</div>
                             <span className="font-bold text-xl text-white tracking-tight">E-Voting DAGM</span>
                         </a>
                         <p className="text-neutral-400 leading-relaxed max-w-sm">
