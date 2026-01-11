@@ -1,9 +1,10 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronRight, Users, Award, Info, X, Vote, Trophy, FileText, CheckCircle, HelpCircle, Instagram, Twitter, Facebook, Mail, MapPin } from 'lucide-react';
-import { getCandidates, castVote, getVoterStatus } from '@/lib/actions';
+import { getCandidates, castVote, getVoterStatus, getVotingSessionId } from '@/lib/actions';
 import type { Candidate } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
@@ -88,6 +89,13 @@ const Modal = ({ isOpen, onClose, title, children, actions }: {isOpen: boolean, 
 };
 
 const VOTER_ID_KEY = 'evoting-voter-id';
+const VOTE_INFO_KEY = 'evoting-vote-info';
+
+type VoteInfo = {
+    sessionId: string;
+    votedCandidateId: string;
+};
+
 
 export default function Home() {
   const { toast } = useToast();
@@ -97,14 +105,38 @@ export default function Home() {
   const [hasVoted, setHasVoted] = useState(false);
   const [votedId, setVotedId] = useState<string | null>(null);
   const [isCheckingVoter, setIsCheckingVoter] = useState(true);
-  const [voterIdentifier, setVoterIdentifier] = useState<string | null>(null);
-
+  
   useEffect(() => {
-    const fetchCandidates = async () => {
-      const data = await getCandidates();
-      setCandidates(data);
+    const fetchInitialData = async () => {
+      const candidatesData = await getCandidates();
+      setCandidates(candidatesData);
+
+      const serverSessionId = await getVotingSessionId();
+      const voteInfoStr = localStorage.getItem(VOTE_INFO_KEY);
+
+      if (voteInfoStr) {
+        try {
+          const voteInfo: VoteInfo = JSON.parse(voteInfoStr);
+          if (voteInfo.sessionId === serverSessionId) {
+            setHasVoted(true);
+            setVotedId(voteInfo.votedCandidateId);
+          } else {
+            // Session is old, clear local storage for re-voting
+            localStorage.removeItem(VOTE_INFO_KEY);
+            localStorage.removeItem(VOTER_ID_KEY);
+            setHasVoted(false);
+            setVotedId(null);
+          }
+        } catch (e) {
+          // Corrupted data, clear it
+          localStorage.removeItem(VOTE_INFO_KEY);
+          localStorage.removeItem(VOTER_ID_KEY);
+        }
+      }
+      setIsCheckingVoter(false);
     };
-    fetchCandidates();
+
+    fetchInitialData();
   }, []);
 
   const getOrCreateVoterIdentifier = useCallback(() => {
@@ -115,26 +147,6 @@ export default function Home() {
     }
     return id;
   }, []);
-
-  useEffect(() => {
-    const checkVoter = async () => {
-        const id = localStorage.getItem(VOTER_ID_KEY);
-        setVoterIdentifier(id);
-        if (id) {
-            setIsCheckingVoter(true);
-            const status = await getVoterStatus(id);
-            if (status.hasVoted) {
-                setHasVoted(true);
-                setVotedId(status.votedCandidateId || null);
-            }
-            setIsCheckingVoter(false);
-        } else {
-            setIsCheckingVoter(false);
-        }
-    };
-    checkVoter();
-  }, []);
-
 
   const openInfo = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
@@ -151,7 +163,7 @@ export default function Home() {
     if (!selectedCandidate) return;
 
     const identifier = getOrCreateVoterIdentifier();
-    setVoterIdentifier(identifier);
+    const serverSessionId = await getVotingSessionId();
 
     const formData = new FormData();
     formData.append('candidateId', selectedCandidate.id);
@@ -164,12 +176,18 @@ export default function Home() {
         setVotedId(selectedCandidate.id);
         setModalType(null);
         setSelectedCandidate(null);
+        
+        const voteInfo: VoteInfo = {
+            sessionId: serverSessionId,
+            votedCandidateId: selectedCandidate.id,
+        };
+        localStorage.setItem(VOTE_INFO_KEY, JSON.stringify(voteInfo));
+
         toast({
             title: "Suara Berhasil Direkam!",
             description: "Terima kasih telah berpartisipasi.",
             className: "bg-green-500 text-white"
         });
-        localStorage.setItem(`votedFor`, selectedCandidate.id);
     } else {
         toast({
             variant: "destructive",
@@ -179,6 +197,12 @@ export default function Home() {
         setModalType(null);
         if (result.message?.includes("sudah digunakan")) {
             setHasVoted(true);
+            const voteInfo: VoteInfo = {
+                sessionId: serverSessionId,
+                votedCandidateId: result.votedCandidateId || '',
+            };
+            setVotedId(result.votedCandidateId || null);
+            localStorage.setItem(VOTE_INFO_KEY, JSON.stringify(voteInfo));
         }
     }
   };
@@ -334,7 +358,7 @@ export default function Home() {
             <div className="mt-16 max-w-md mx-auto text-center p-6 bg-green-500/10 border border-green-500/20 rounded-2xl">
               <h3 className="text-lg font-semibold text-green-400 mb-2">Anda Sudah Memilih</h3>
               <p className="text-neutral-400 text-sm">
-                  Terima kasih atas partisipasi Anda. Suara Anda telah direkam dan tidak dapat diubah lagi dari perangkat ini.
+                  Terima kasih atas partisipasi Anda. Suara Anda telah direkam dan tidak dapat diubah lagi dari perangkat ini selama sesi voting ini.
               </p>
             </div>
           }
@@ -522,5 +546,3 @@ const Footer = () => {
       </footer>
     )
 }
-
-    

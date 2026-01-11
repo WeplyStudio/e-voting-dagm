@@ -1,3 +1,4 @@
+
 "use server";
 
 import { z } from "zod";
@@ -187,16 +188,17 @@ export async function castVote(formData: FormData) {
 
     try {
         const voters = await getVotersCollection();
-        const voter = await voters.findOne({ identifier: voterIdentifier });
+        const sessionId = await getVotingSessionId();
+
+        const voter = await voters.findOne({ identifier: voterIdentifier, sessionId });
         
         if (voter && voter.hasVoted) {
-            return { success: false, message: 'Anda sudah pernah memberikan suara dari perangkat ini.' };
+            return { success: false, message: 'Anda sudah pernah memberikan suara dari perangkat ini.', votedCandidateId: voter.votedCandidateId?.toString() };
         }
         
-        // If voter doesn't exist or hasn't voted, upsert their vote
         await voters.updateOne(
             { identifier: voterIdentifier },
-            { $set: { hasVoted: true, votedAt: new Date(), votedCandidateId: new ObjectId(candidateId) } },
+            { $set: { hasVoted: true, votedAt: new Date(), votedCandidateId: new ObjectId(candidateId), sessionId: sessionId } },
             { upsert: true }
         );
         
@@ -284,16 +286,17 @@ export async function setShowResultsStatus(show: boolean) {
     return setSetting("showResults", show);
 }
 
+export async function getVotingSessionId(): Promise<string> {
+    return getSetting("votingSessionId", "default-session");
+}
 
 export async function resetAllVotes() {
     try {
-        // Reset votes on all candidates
         const candidates = await getCandidatesCollection();
         await candidates.updateMany({}, { $set: { votes: 0 } });
-
-        // Reset hasVoted status on all voters, but keep the tokens
-        const voters = await getVotersCollection();
-        await voters.deleteMany({});
+        
+        const newSessionId = `session_${Date.now()}`;
+        await setSetting("votingSessionId", newSessionId);
         
         revalidateAll();
         return { success: true };
