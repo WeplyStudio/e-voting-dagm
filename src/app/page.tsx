@@ -492,7 +492,7 @@ const Footer = () => {
     return (
         <footer className="relative z-10 pt-20 pb-10 border-t border-white/10 bg-neutral-950 text-sm">
             <div className="max-w-7xl mx-auto px-6">
-                <div className="grid md:grid-cols-4 gap-12 mb-16">
+                <div className="grid md:grid-cols-3 gap-12 mb-16">
                     <div className="col-span-1 md:col-span-2 space-y-4">
                         <a href="/" className="flex items-center gap-2 cursor-pointer">
                             <span className="font-bold text-xl text-white tracking-tight">E-Voting DAGM</span>
@@ -521,17 +521,6 @@ const Footer = () => {
                             <li><button onClick={() => scrollToSection('faq')} className="hover:text-blue-400 transition-colors flex items-center gap-2"><ChevronRight size={14} /> FAQ</button></li>
                         </ul>
                     </div>
-                    <div>
-                        <h4 className="font-bold text-white mb-6 text-lg">Hubungi Kami</h4>
-                        <ul className="space-y-4 text-neutral-400">
-                            <li className="flex items-start gap-3 group">
-                                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0 group-hover:bg-blue-500/20 transition-colors">
-                                    <MapPin size={16} className="text-blue-400" />
-                                </div>
-                                <span className="leading-relaxed">Jl. D.I. Panjaitan No.9, Melayu Kota Piring, Kec. Tanjungpinang Tim., Kota Tanjung Pinang, Kepulauan Riau 29125</span>
-                            </li>
-                        </ul>
-                    </div>
                 </div>
 
                 <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-neutral-500">
@@ -546,3 +535,5 @@ const Footer = () => {
       </footer>
     )
 }
+
+    
