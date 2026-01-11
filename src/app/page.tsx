@@ -244,7 +244,7 @@ export default function Home() {
             transition={{ duration: 0.6 }}
           >
             <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 mb-6 inline-block">
-              Periode 2024 - 2025
+              Periode 2025 - 2026
             </Badge>
             <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight leading-[1.1] mb-6">
               Tentukan Masa Depan <br />
