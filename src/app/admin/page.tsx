@@ -23,7 +23,7 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-const ADMIN_PASSWORD = "osis-keren-2024";
+const ADMIN_PASSWORD = "dagmjaya";
 const AUTH_COOKIE_NAME = "admin-authenticated";
 
 export default function AdminPage() {
