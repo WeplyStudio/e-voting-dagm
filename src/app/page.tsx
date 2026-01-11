@@ -527,7 +527,7 @@ const Footer = () => {
                     <p>© 2024 Komisi Pemilihan DAGM. All rights reserved.</p>
                     <div className="flex flex-wrap justify-center items-center gap-6 text-xs font-medium uppercase tracking-wider">
                         <span className="flex items-center gap-1 normal-case tracking-normal border-l border-white/10 pl-6">
-                            Made with <span className="text-red-500 animate-pulse">♥</span> by Tim IT
+                            Made with <span className="text-red-500 animate-pulse">♥</span> by Tim Media dan Kreatif
                         </span>
                     </div>
                 </div>
