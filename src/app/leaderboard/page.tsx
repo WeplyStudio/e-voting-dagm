@@ -41,7 +41,7 @@ const Footer = () => {
                 </div>
 
                 <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-neutral-500">
-                    <p>© 2024 Komisi Pemilihan DAGM. All rights reserved.</p>
+                    <p>© 2026 Komisi Pemilihan DAGM. All rights reserved.</p>
                     <div className="flex flex-wrap justify-center items-center gap-6 text-xs font-medium uppercase tracking-wider">
                         <span className="flex items-center gap-1 normal-case tracking-normal border-l border-white/10 pl-6">
                             Made with <span className="text-red-500 animate-pulse">♥</span> by Tim Media dan Kreatif
@@ -65,7 +65,7 @@ export default async function ResultsPage() {
         <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary">Hasil Perolehan Suara</h1>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Perhitungan suara pemilihan ketua DAGM periode 2024-2025.
+              Perhitungan suara pemilihan ketua DAGM periode 2025-2026.
             </p>
         </div>
 
